@@ -1,10 +1,10 @@
 {
   "name": "z-images",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "A service that allows users to upload and process images",
+  "author": "Ezzeldin Kandeel",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

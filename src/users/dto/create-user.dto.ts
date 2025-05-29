@@ -5,6 +5,6 @@ export class CreateUserDto {
   @Length(2, 25) // min, max
   username: string;
   @IsString()
-  @Length(18, 25) // min, max
+  @Length(12, 25) // min, max
   password: string;
 }

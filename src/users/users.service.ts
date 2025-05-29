@@ -5,13 +5,14 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from 'src/env.validation';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private configService: ConfigService,
+    private configService: ConfigService<EnvironmentVariables>,
   ) {}
   async create(createUserDto: CreateUserDto): Promise<void> {
     const user = new User();

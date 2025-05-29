@@ -7,19 +7,16 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { DataSource } from 'typeorm';
 import { User } from './users/entities/user.entity';
-import { validate } from './env.validation';
+import { EnvironmentVariables, validate } from './env.validation';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      validate,
-      isGlobal: true,
-    }),
+    ConfigModule.forRoot({ validate }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
         type: 'postgres',
-        host: configService.get('HOST'),
+        host: configService.get('DB_HOST'),
         port: +configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),

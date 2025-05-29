@@ -8,7 +8,7 @@ import {
   validateSync,
 } from 'class-validator';
 
-class EnvironmentVariables {
+export class EnvironmentVariables {
   @IsNumber()
   @Min(0)
   @Max(65535)
@@ -33,8 +33,12 @@ class EnvironmentVariables {
 
   @IsBoolean()
   DB_SYNC_SCHEMA: boolean;
+
   @IsNumber()
   BCRYPT_SALT_ROUNDS: number;
+
+  @IsString()
+  JWT_SECRET: string;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -19,6 +19,7 @@ import { JwtStrategy } from './jwt.strategy';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
         secret: configService.getOrThrow('JWT_SECRET'),
+        signOptions: { expiresIn: '6h' }, // The access token expires in 6 hours.
       }),
       inject: [ConfigService],
     }),

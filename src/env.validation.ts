@@ -8,6 +8,9 @@ import {
   validateSync,
 } from 'class-validator';
 
+// For environment variable validation.
+// When used with (ConfigService), this enables TypeScript
+// to autocomplete environment variable keys, which is very handy.
 export class EnvironmentVariables {
   @IsNumber()
   @Min(0)

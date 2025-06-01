@@ -12,7 +12,7 @@ export class AuthController {
   @Post('login')
   login(@Request() req: Req) {
     // This is just to please Typescript.
-    // If we reach this line, there IS a user on req.
+    // If we reach this line, there WILL ALWAYS BE a user on req.
     if (!req.user) return;
     return this.authService.login(req.user as User);
   }

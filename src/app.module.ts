@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { DataSource } from 'typeorm';
 import { User } from './users/entities/user.entity';
 import { EnvironmentVariables, validate } from './env.validation';
+import { ImagesModule } from './images/images.module';
 
 @Module({
   imports: [
@@ -22,12 +23,13 @@ import { EnvironmentVariables, validate } from './env.validation';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE_NAME'),
         entities: [User],
-        synchronize: configService.get('DB_SYNC_SCHEMA'),
+        synchronize: true, // Auto DB migrations (for early development only)
       }),
       inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
+    ImagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

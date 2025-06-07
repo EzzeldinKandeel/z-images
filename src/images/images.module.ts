@@ -15,7 +15,7 @@ import { EnvironmentVariables } from 'src/env.validation';
         ({
           endPoint: configService.get('MINIO_ENDPOINT'),
           port: configService.get('MINIO_PORT'),
-          useSSL: false,
+          useSSL: false, // for lacal development.
           accessKey: configService.get('MINIO_ACCESS_KEY'),
           secretKey: configService.get('MINIO_SECRET_KEY'),
         }) as NestMinioOptions,

@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 import { NestMinioService } from 'nestjs-minio';
 import { Express } from 'express';
-import { Client } from 'minio';
+import { Client, S3Error } from 'minio';
 import { randomUUID } from 'crypto';
 
 @Injectable()
@@ -12,7 +17,23 @@ export class ImagesService {
   }
 
   async findOne(imagePath: string) {
-    const image = await this.minioClient.getObject('z-images', imagePath);
+    try {
+      const imageStream = await this.minioClient.getObject(
+        'z-images',
+        imagePath,
+      );
+
+      return new StreamableFile(imageStream);
+    } catch (error) {
+      if (error instanceof S3Error && error.code === 'NoSuchKey') {
+        throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+      }
+
+      throw new HttpException(
+        'Could not retrieve image',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async upload(images: Array<Express.Multer.File>) {
@@ -21,16 +42,21 @@ export class ImagesService {
       const fileFormat = image.originalname.substring(
         image.originalname.lastIndexOf('.') + 1,
       );
-      console.log(image);
-      const result = await this.minioClient.putObject(
-        'z-images',
-        `${randomUUID()}.${fileFormat}`,
-        image.buffer,
-        image.size,
-        { 'Content-Type': image.mimetype },
-      );
 
-      console.log(result);
+      try {
+        await this.minioClient.putObject(
+          'z-images',
+          `${randomUUID()}.${fileFormat}`,
+          image.buffer,
+          image.size,
+          { 'Content-Type': image.mimetype },
+        );
+      } catch {
+        throw new HttpException(
+          'Could not upload image',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 }

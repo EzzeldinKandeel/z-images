@@ -2,6 +2,7 @@ import {
   Controller,
   FileTypeValidator,
   Get,
+  Header,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
@@ -23,8 +24,11 @@ export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
   @Get(':imagePath')
+  // Specifying the content type makes the browser view the image
+  // instead of automatically downloading it.
+  @Header('Content-Type', 'image')
   findOne(@Param('imagePath') imagePath: string) {
-    return this.findOne(imagePath);
+    return this.imagesService.findOne(imagePath);
   }
 
   @Post()

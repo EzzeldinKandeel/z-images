@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { User } from './users/entities/user.entity';
 import { EnvironmentVariables, validate } from './env.validation';
 import { ImagesModule } from './images/images.module';
+import { Image } from './images/entities/image.entity';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { ImagesModule } from './images/images.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE_NAME'),
-        entities: [User],
+        entities: [User, Image],
         synchronize: true, // Auto DB migrations (for early development only)
       }),
       inject: [ConfigService],

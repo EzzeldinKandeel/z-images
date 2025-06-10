@@ -4,6 +4,8 @@ import { ImagesController } from './images.controller';
 import { NestMinioModule, NestMinioOptions } from 'nestjs-minio';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/env.validation';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Image } from './entities/image.entity';
 
 @Module({
   controllers: [ImagesController],
@@ -21,6 +23,7 @@ import { EnvironmentVariables } from 'src/env.validation';
         }) as NestMinioOptions,
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature([Image]),
   ],
 })
 export class ImagesModule {}

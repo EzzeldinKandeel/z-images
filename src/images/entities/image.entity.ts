@@ -1,25 +1,22 @@
-import { Image } from 'src/images/entities/image.entity';
+import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   Index,
-  OneToMany,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-export class User {
+export class Image {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
   @Index({ unique: true })
-  username: string;
-
-  @Column()
-  hash: string;
+  path: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -27,6 +24,6 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => Image, (images) => images.user)
-  images: Image[];
+  @ManyToOne(() => User, (user) => user.images)
+  user: User;
 }

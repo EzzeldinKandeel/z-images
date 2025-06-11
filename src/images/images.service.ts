@@ -73,6 +73,7 @@ export class ImagesService {
   async upload(images: Array<Express.Multer.File>, user: User) {
     for (const image of images) {
       const imageObjectName = randomUUID();
+      console.dir(image);
 
       try {
         await this.minioClient.putObject(
@@ -99,7 +100,11 @@ export class ImagesService {
         // Something went wrong with saving the image path in the database.
         // So, we delete the image from storage, then throw an http exception.
 
-        // TODO: Delete image.
+        try {
+          await this.minioClient.removeObject('z-images', imageObjectName);
+        } catch {
+          // It would be redundant to throw an http exception here.
+        }
 
         throw new HttpException(
           'Could not upload image(s)',

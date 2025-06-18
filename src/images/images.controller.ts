@@ -32,14 +32,14 @@ export class ImagesController {
   // Specifying the content type makes the browser view the image
   // instead of automatically downloading it.
   @Header('Content-Type', 'image')
-  findOne(@Param('imagePath') imagePath: string, @Request() req: Req) {
+  async findOne(@Param('imagePath') imagePath: string, @Request() req: Req) {
     return this.imagesService.findOne(imagePath, req.user as User);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images'))
-  upload(
+  async upload(
     @UploadedFiles(new ParseFilePipe({ validators: fileValidators }))
     images: Array<Express.Multer.File>,
     @Request() req: Req,

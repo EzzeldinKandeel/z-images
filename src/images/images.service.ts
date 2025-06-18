@@ -59,7 +59,6 @@ export class ImagesService {
       return new StreamableFile(imageStream);
     } catch (error) {
       if (error instanceof S3Error && error.code === 'NoSuchKey') {
-        console.log('No image object');
         throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
       }
 
@@ -73,7 +72,6 @@ export class ImagesService {
   async upload(images: Array<Express.Multer.File>, user: User) {
     for (const image of images) {
       const imageObjectName = randomUUID();
-      console.dir(image);
 
       try {
         await this.minioClient.putObject(

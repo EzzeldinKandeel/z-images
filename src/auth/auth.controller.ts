@@ -1,8 +1,8 @@
-import { Controller, Post, Request, UseGuards } from '@nestjs/common';
+import { Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
-import { Request as Req } from 'express';
 import { User } from 'src/users/entities/user.entity';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
 
 @Controller()
 export class AuthController {
@@ -10,10 +10,10 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@Request() req: Req) {
+  login(@CurrentUser() user: User) {
     // This is just to please Typescript.
     // If we reach this line, there WILL ALWAYS BE a user on req.
-    if (!req.user) return;
-    return this.authService.login(req.user as User);
+    if (!user) return;
+    return this.authService.login(user);
   }
 }

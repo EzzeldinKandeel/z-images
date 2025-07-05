@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   FileTypeValidator,
   Get,
@@ -7,17 +8,17 @@ import {
   Param,
   ParseFilePipe,
   Post,
-  Request,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ImagesService } from './images.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { Express, Request as Req } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
 import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { TransformImageDto } from './image-manipulation/dto/transform-image.dto';
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
@@ -36,8 +37,11 @@ export class ImagesController {
   // Specifying the content type makes the browser view the image
   // instead of automatically downloading it.
   @Header('Content-Type', 'image')
-  async findOne(@Param('imagePath') imagePath: string, @Request() req: Req) {
-    return this.imagesService.findOne(imagePath, req.user as User);
+  async findOne(
+    @Param('imagePath') imagePath: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.imagesService.findOne(imagePath, user);
   }
 
   @Post()
@@ -46,16 +50,22 @@ export class ImagesController {
   async upload(
     @UploadedFiles(new ParseFilePipe({ validators: fileValidators }))
     images: Array<Express.Multer.File>,
-    @Request() req: Req,
+    @CurrentUser() user: User,
   ) {
-    return this.imagesService.upload(images, req.user as User);
+    return this.imagesService.upload(images, user);
   }
 
   @Post(':imagePath/transform')
   @UseGuards(JwtAuthGuard)
   @Header('Content-Type', 'image')
-  async transform(@Param('imagePath') imagePath: string, @Request() req: Req) {
-    const image = await this.imagesService.findOne(imagePath, req.user as User);
-    return this.imageManipulationService.resize(image);
+  async transform(
+    @Param('imagePath') imagePath: string,
+    @CurrentUser() user: User,
+    @Body() transformImageDto: TransformImageDto,
+  ) {
+    // const image = await this.imagesService.findOne(imagePath, user);
+    console.dir(transformImageDto.transformations);
+    return 'Good transformations object';
+    // return this.imageManipulationService.resize(image);
   }
 }

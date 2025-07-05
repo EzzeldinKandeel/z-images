@@ -18,6 +18,9 @@ export class Image {
   @Index({ unique: true })
   path: string;
 
+  @Column()
+  mimetype: string; // image/jpeg, image/png, ...etc.
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

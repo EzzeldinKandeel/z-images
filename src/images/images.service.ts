@@ -56,7 +56,7 @@ export class ImagesService {
         imagePath,
       );
 
-      return new StreamableFile(imageStream, { type: 'image' });
+      return new StreamableFile(imageStream, { type: imageRecord.mimetype });
     } catch (error) {
       if (error instanceof S3Error && error.code === 'NoSuchKey') {
         throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
@@ -92,6 +92,7 @@ export class ImagesService {
       try {
         const imageRecord = new Image();
         imageRecord.path = imageObjectName;
+        imageRecord.mimetype = image.mimetype;
         imageRecord.user = user;
         await this.imageRepository.save(imageRecord);
       } catch {

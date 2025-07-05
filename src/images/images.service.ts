@@ -56,7 +56,7 @@ export class ImagesService {
         imagePath,
       );
 
-      return new StreamableFile(imageStream);
+      return new StreamableFile(imageStream, { type: 'image' });
     } catch (error) {
       if (error instanceof S3Error && error.code === 'NoSuchKey') {
         throw new HttpException('Image not found', HttpStatus.NOT_FOUND);

@@ -8,7 +8,6 @@ import { User } from './users/entities/user.entity';
 import { EnvironmentVariables, validate } from './env.validation';
 import { ImagesModule } from './images/images.module';
 import { Image } from './images/entities/image.entity';
-import { JimpModule } from './jimp/jimp.module';
 
 @Module({
   imports: [
@@ -30,7 +29,6 @@ import { JimpModule } from './jimp/jimp.module';
     UsersModule,
     AuthModule,
     ImagesModule,
-    JimpModule,
   ],
 })
 export class AppModule {

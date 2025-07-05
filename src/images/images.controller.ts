@@ -17,6 +17,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { Express, Request as Req } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
+import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
@@ -25,7 +26,10 @@ const fileValidators = [
 
 @Controller('images')
 export class ImagesController {
-  constructor(private readonly imagesService: ImagesService) {}
+  constructor(
+    private readonly imagesService: ImagesService,
+    private readonly imageManipulationService: ImageManipulationService,
+  ) {}
 
   @Get(':imagePath')
   @UseGuards(JwtAuthGuard)
@@ -45,5 +49,13 @@ export class ImagesController {
     @Request() req: Req,
   ) {
     return this.imagesService.upload(images, req.user as User);
+  }
+
+  @Post(':imagePath/transform')
+  @UseGuards(JwtAuthGuard)
+  @Header('Content-Type', 'image')
+  async transform(@Param('imagePath') imagePath: string, @Request() req: Req) {
+    const image = await this.imagesService.findOne(imagePath, req.user as User);
+    return this.imageManipulationService.resize(image);
   }
 }

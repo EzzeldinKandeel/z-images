@@ -1,10 +1,10 @@
 import { Type } from 'class-transformer';
 import {
-  IsMimeType,
+  IsBoolean,
+  IsIn,
   IsNumber,
   IsObject,
   IsOptional,
-  IsString,
   ValidateNested,
 } from 'class-validator';
 
@@ -30,7 +30,15 @@ class Crop {
   y: number;
 }
 
-class Transformations {
+class Flip {
+  @IsBoolean()
+  horizontal: boolean;
+
+  @IsBoolean()
+  vertical: boolean;
+}
+
+export class Transformations {
   @IsObject()
   @IsOptional()
   @ValidateNested()
@@ -47,10 +55,34 @@ class Transformations {
   @IsOptional()
   rotate: number;
 
-  @IsString()
-  @IsMimeType()
+  @IsIn(['bmp', 'gif', 'jpeg', 'png', 'tiff'])
   @IsOptional()
-  format: string;
+  format: 'bmp' | 'gif' | 'jpeg' | 'png' | 'tiff';
+
+  @IsObject()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => Flip)
+  flip: Flip;
+
+  @IsIn([
+    'blur',
+    'dither',
+    'fisheye',
+    'greyscale',
+    'invert',
+    'pixelate',
+    'sepia',
+  ])
+  @IsOptional()
+  effect:
+    | 'blur'
+    | 'dither'
+    | 'fisheye'
+    | 'greyscale'
+    | 'invert'
+    | 'pixelate'
+    | 'sepia';
 }
 
 export class TransformImageDto {

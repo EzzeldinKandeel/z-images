@@ -63,9 +63,10 @@ export class ImagesController {
     @CurrentUser() user: User,
     @Body() transformImageDto: TransformImageDto,
   ) {
-    // const image = await this.imagesService.findOne(imagePath, user);
-    console.dir(transformImageDto.transformations);
-    return 'Good transformations object';
-    // return this.imageManipulationService.resize(image);
+    const image = await this.imagesService.findOne(imagePath, user);
+    return this.imageManipulationService.transform(
+      image,
+      transformImageDto.transformations,
+    );
   }
 }

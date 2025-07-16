@@ -8,6 +8,7 @@ import {
   Param,
   ParseFilePipe,
   Post,
+  StreamableFile,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -19,6 +20,7 @@ import { User } from 'src/users/entities/user.entity';
 import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { TransformImageDto } from './image-manipulation/dto/transform-image.dto';
+import { ImageData } from './images.service';
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
@@ -40,7 +42,7 @@ export class ImagesController {
   async findOne(
     @Param('imagePath') imagePath: string,
     @CurrentUser() user: User,
-  ) {
+  ): Promise<StreamableFile> {
     return this.imagesService.findOne(imagePath, user);
   }
 
@@ -51,7 +53,7 @@ export class ImagesController {
     @UploadedFiles(new ParseFilePipe({ validators: fileValidators }))
     images: Array<Express.Multer.File>,
     @CurrentUser() user: User,
-  ) {
+  ): Promise<Array<ImageData>> {
     return this.imagesService.upload(images, user);
   }
 
@@ -62,11 +64,17 @@ export class ImagesController {
     @Param('imagePath') imagePath: string,
     @CurrentUser() user: User,
     @Body() transformImageDto: TransformImageDto,
-  ) {
+  ): Promise<ImageData> {
     const image = await this.imagesService.findOne(imagePath, user);
-    return this.imageManipulationService.transform(
+    const imageBuffer = await this.imageManipulationService.transform(
       image,
       transformImageDto.transformations,
+    );
+
+    return this.imagesService.uploadSingleImage(
+      imageBuffer.imageBuffer,
+      imageBuffer.mimeType,
+      user,
     );
   }
 }

@@ -11,9 +11,6 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   login(@CurrentUser() user: User) {
-    // This is just to please Typescript.
-    // If we reach this line, there WILL ALWAYS BE a user on req.
-    if (!user) return;
     return this.authService.login(user);
   }
 }

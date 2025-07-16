@@ -5,6 +5,9 @@ import { IsNumber, IsString, Max, Min, validateSync } from 'class-validator';
 // When used with (ConfigService), this enables TypeScript
 // to autocomplete environment variable keys, which is very handy.
 export class EnvironmentVariables {
+  @IsString()
+  HOSTNAME: string;
+
   @IsNumber()
   @Min(0)
   @Max(65535)

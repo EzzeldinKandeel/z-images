@@ -13,6 +13,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Image } from './entities/image.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { ConfigService } from '@nestjs/config';
+import { EnvironmentVariables } from 'src/env.validation';
+
+export type MimeType =
+  | 'image/x-ms-bmp'
+  | 'image/bmp'
+  | 'image/gif'
+  | 'image/jpeg'
+  | 'image/png'
+  | 'image/tiff';
+
+export type ImageData = { url: string; mimeType: MimeType };
 
 @Injectable()
 export class ImagesService {
@@ -21,6 +33,7 @@ export class ImagesService {
     private nestMinioService: NestMinioService,
     @InjectRepository(Image)
     private imageRepository: Repository<Image>,
+    private configService: ConfigService<EnvironmentVariables>,
   ) {
     this.minioClient = nestMinioService.getMinio();
   }
@@ -69,47 +82,92 @@ export class ImagesService {
     }
   }
 
-  async upload(images: Array<Express.Multer.File>, user: User) {
+  async upload(
+    images: Array<Express.Multer.File>,
+    user: User,
+  ): Promise<Array<ImageData>> {
+    const imageDataArray: Array<ImageData> = [];
+
     for (const image of images) {
-      const imageObjectName = randomUUID();
-
-      try {
-        await this.minioClient.putObject(
-          'z-images',
-          `${imageObjectName}`,
+      imageDataArray.push(
+        await this.uploadSingleImage(
           image.buffer,
-          image.size,
-          { 'Content-Type': image.mimetype },
-        );
-      } catch {
-        // Something went wrong with uploading the image to storage.
-        throw new HttpException(
-          'Could not upload image(s)',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+          image.mimetype as MimeType,
+          user,
+        ),
+      );
+    }
+
+    return imageDataArray;
+  }
+
+  async uploadSingleImage(
+    imageBuffer: Buffer,
+    mimeType: MimeType,
+    imageOwner: User,
+  ): Promise<ImageData> {
+    const imageObjectName = await this.storeImage(imageBuffer, mimeType);
+    await this.createImageRecord(imageObjectName, mimeType, imageOwner);
+
+    return {
+      url: `${this.configService.getOrThrow('HOSTNAME')}/images/${imageObjectName}`,
+      mimeType,
+    };
+  }
+
+  private async storeImage(
+    imageBuffer: Buffer,
+    mimeType: MimeType,
+  ): Promise<string> {
+    const imageObjectName = randomUUID();
+
+    try {
+      await this.minioClient.putObject(
+        'z-images',
+        `${imageObjectName}`,
+        imageBuffer,
+        undefined,
+        { 'Content-Type': mimeType },
+      );
+    } catch (err) {
+      console.error('Could not store image in object storage', err);
+      throw new HttpException(
+        'Could not upload image(s)',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return imageObjectName;
+  }
+
+  private async createImageRecord(
+    imageObjectName: string,
+    mimeType: MimeType,
+    imageOwner: User,
+  ) {
+    try {
+      const imageRecord = new Image();
+      imageRecord.path = imageObjectName;
+      imageRecord.mimetype = mimeType;
+      imageRecord.user = imageOwner;
+      await this.imageRepository.save(imageRecord);
+    } catch (err) {
+      // Something went wrong with saving the image path in the database.
+      // So, we delete the image from storage, then throw an http exception.
+      console.error('Could not create a record for image in database', err);
+      console.log('Attempting deletion of image from object storage...');
 
       try {
-        const imageRecord = new Image();
-        imageRecord.path = imageObjectName;
-        imageRecord.mimetype = image.mimetype;
-        imageRecord.user = user;
-        await this.imageRepository.save(imageRecord);
-      } catch {
-        // Something went wrong with saving the image path in the database.
-        // So, we delete the image from storage, then throw an http exception.
-
-        try {
-          await this.minioClient.removeObject('z-images', imageObjectName);
-        } catch {
-          // It would be redundant to throw an http exception here.
-        }
-
-        throw new HttpException(
-          'Could not upload image(s)',
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
+        await this.minioClient.removeObject('z-images', imageObjectName);
+        console.log('Image deletion successful');
+      } catch (err) {
+        console.error('Could not delete image from object storage', err);
       }
+
+      throw new HttpException(
+        'Could not upload image(s)',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

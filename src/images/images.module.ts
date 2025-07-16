@@ -25,6 +25,7 @@ import { ImageManipulationService } from './image-manipulation/image-manipulatio
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Image]),
+    ConfigModule,
   ],
 })
 export class ImagesModule {}

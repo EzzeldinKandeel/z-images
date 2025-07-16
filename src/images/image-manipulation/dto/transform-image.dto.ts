@@ -8,12 +8,26 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-class Resize {
-  @IsNumber()
-  width: number;
+const effects = [
+  'blur',
+  'dither',
+  'fisheye',
+  'greyscale',
+  'invert',
+  'pixelate',
+  'sepia',
+] as const;
 
+const formats = ['bmp', 'gif', 'jpeg', 'png', 'tiff'] as const;
+
+class Resize {
+  @IsOptional()
   @IsNumber()
-  height: number;
+  width?: number;
+
+  @IsOptional()
+  @IsNumber()
+  height?: number;
 }
 
 class Crop {
@@ -32,10 +46,12 @@ class Crop {
 
 class Flip {
   @IsBoolean()
-  horizontal: boolean;
+  @IsOptional()
+  horizontal?: boolean;
 
+  @IsOptional()
   @IsBoolean()
-  vertical: boolean;
+  vertical?: boolean;
 }
 
 export class Transformations {
@@ -55,34 +71,19 @@ export class Transformations {
   @IsOptional()
   rotate: number;
 
-  @IsIn(['bmp', 'gif', 'jpeg', 'png', 'tiff'])
-  @IsOptional()
-  format: 'bmp' | 'gif' | 'jpeg' | 'png' | 'tiff';
-
   @IsObject()
   @IsOptional()
   @ValidateNested()
   @Type(() => Flip)
   flip: Flip;
 
-  @IsIn([
-    'blur',
-    'dither',
-    'fisheye',
-    'greyscale',
-    'invert',
-    'pixelate',
-    'sepia',
-  ])
+  @IsIn(effects)
   @IsOptional()
-  effect:
-    | 'blur'
-    | 'dither'
-    | 'fisheye'
-    | 'greyscale'
-    | 'invert'
-    | 'pixelate'
-    | 'sepia';
+  effect: (typeof effects)[number];
+
+  @IsIn(formats)
+  @IsOptional()
+  format: (typeof formats)[number];
 }
 
 export class TransformImageDto {

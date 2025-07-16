@@ -13,14 +13,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ImagesService } from './images.service';
+import { ImagesService, ImageData } from './images.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
 import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { TransformImageDto } from './image-manipulation/dto/transform-image.dto';
-import { ImageData } from './images.service';
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
@@ -66,14 +65,14 @@ export class ImagesController {
     @Body() transformImageDto: TransformImageDto,
   ): Promise<ImageData> {
     const image = await this.imagesService.findOne(imagePath, user);
-    const imageBuffer = await this.imageManipulationService.transform(
+    const imageBufferData = await this.imageManipulationService.transform(
       image,
       transformImageDto.transformations,
     );
 
     return this.imagesService.uploadSingleImage(
-      imageBuffer.imageBuffer,
-      imageBuffer.mimeType,
+      imageBufferData.imageBuffer,
+      imageBufferData.mimeType,
       user,
     );
   }

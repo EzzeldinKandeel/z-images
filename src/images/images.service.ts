@@ -38,7 +38,7 @@ export class ImagesService {
     this.minioClient = nestMinioService.getMinio();
   }
 
-  async findOne(imagePath: string, user: User) {
+  async findOne(imagePath: string, user: User): Promise<StreamableFile> {
     let imageRecord: Image | null;
     try {
       imageRecord = (
@@ -144,7 +144,7 @@ export class ImagesService {
     imageObjectName: string,
     mimeType: MimeType,
     imageOwner: User,
-  ) {
+  ): Promise<void> {
     try {
       const imageRecord = new Image();
       imageRecord.path = imageObjectName;

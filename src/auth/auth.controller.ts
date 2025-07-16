@@ -10,7 +10,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  login(@CurrentUser() user: User) {
+  login(@CurrentUser() user: User): { access_token: string } {
     return this.authService.login(user);
   }
 }

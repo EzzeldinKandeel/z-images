@@ -8,26 +8,16 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-const effects = [
-  'blur',
-  'dither',
-  'fisheye',
-  'greyscale',
-  'invert',
-  'pixelate',
-  'sepia',
-] as const;
-
 const formats = ['bmp', 'gif', 'jpeg', 'png', 'tiff'] as const;
 
 class Resize {
   @IsOptional()
   @IsNumber()
-  width?: number;
+  width: number;
 
   @IsOptional()
   @IsNumber()
-  height?: number;
+  height: number;
 }
 
 class Crop {
@@ -54,6 +44,36 @@ class Flip {
   vertical?: boolean;
 }
 
+class Filters {
+  @IsNumber()
+  @IsOptional()
+  blur: number;
+
+  @IsBoolean()
+  @IsOptional()
+  dither: boolean = false;
+
+  @IsBoolean()
+  @IsOptional()
+  fisheye: boolean = false;
+
+  @IsBoolean()
+  @IsOptional()
+  greyscale: boolean = false;
+
+  @IsBoolean()
+  @IsOptional()
+  invert: boolean = false;
+
+  @IsNumber()
+  @IsOptional()
+  pixelate: number;
+
+  @IsBoolean()
+  @IsOptional()
+  sepia: boolean = false;
+}
+
 export class Transformations {
   @IsObject()
   @IsOptional()
@@ -77,9 +97,11 @@ export class Transformations {
   @Type(() => Flip)
   flip: Flip;
 
-  @IsIn(effects)
+  @IsObject()
   @IsOptional()
-  effect: (typeof effects)[number];
+  @ValidateNested()
+  @Type(() => Filters)
+  filters: Filters;
 
   @IsIn(formats)
   @IsOptional()

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ImagesService, MimeType } from '../images.service';
 import { readCompleteBuffer } from 'src/utils/read-complete-buffer';
-import { Jimp } from 'jimp';
+import { Jimp, JimpInstance } from 'jimp';
 import { Transformations } from './dto/transform-image.dto';
 
 @Injectable()
@@ -17,20 +17,19 @@ export class ImageManipulationService {
     image: StreamableFile,
     transformations: Transformations,
   ): Promise<{ imageBuffer: Buffer; mimeType: MimeType }> {
-    let imageJimp = await this.makeJimp(image);
+    let imageJimp: JimpInstance = await this.makeJimp(image);
 
     // We do this because format is not like any other transformation,
     // and should only be considered at the very end (after all other
     // transformations have been applied).
     const { format, ...restOfTransformations } = transformations;
-
     for (const transformation in restOfTransformations) {
       if (transformations[transformation]) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        imageJimp = this[transformation](
+        imageJimp = this.applyTransformation(
+          transformation as keyof Transformations,
           imageJimp,
-          transformations[transformation],
-        ) as typeof imageJimp;
+          transformations[transformation] as number | object,
+        );
       }
     }
 
@@ -43,10 +42,10 @@ export class ImageManipulationService {
     return { imageBuffer: await imageJimp.getBuffer(mime), mimeType: mime };
   }
 
-  private async makeJimp(image: StreamableFile) {
+  private async makeJimp(image: StreamableFile): Promise<JimpInstance> {
     try {
       const imageBuffer = await readCompleteBuffer(image.getStream());
-      const imageJimp = await Jimp.read(imageBuffer);
+      const imageJimp = (await Jimp.read(imageBuffer)) as JimpInstance;
 
       return imageJimp;
     } catch (error) {
@@ -55,80 +54,82 @@ export class ImageManipulationService {
     }
   }
 
+  private applyTransformation(
+    transformationType: keyof Transformations,
+    image: JimpInstance,
+    options: object | number,
+  ): JimpInstance {
+    switch (transformationType) {
+      case 'crop':
+        return this.crop(image, options as Transformations['crop']);
+      case 'filters':
+        return this.filters(image, options as Transformations['filters']);
+      case 'flip':
+        return this.flip(image, options as Transformations['flip']);
+      case 'resize':
+        return this.resize(image, options as Transformations['resize']);
+      case 'rotate':
+        return this.resize(image, options as Transformations['resize']);
+      default:
+        return image;
+    }
+  }
+
   private resize(
-    image: Awaited<ReturnType<typeof this.makeJimp>>,
+    image: JimpInstance,
     options: Transformations['resize'],
-  ) {
-    type ResizeOptions = { w: number; h?: number } | { w?: number; h: number };
+  ): JimpInstance {
+    const resizeOptions = { w: options.width, h: options.height };
 
-    const resizeOptions: { w?: number; h?: number } = {};
-    if (options.width) resizeOptions.w = options.width;
-    if (options.height) resizeOptions.h = options.height;
-
-    if (!resizeOptions.h && !resizeOptions.w) return image;
-
-    return image.resize(resizeOptions as ResizeOptions);
+    if (!resizeOptions.h && !resizeOptions.w)
+      throw new HttpException(
+        'You have to provide (width) and/or (height) to resize image',
+        HttpStatus.BAD_REQUEST,
+      );
+    return image.resize(resizeOptions) as JimpInstance;
   }
 
   private crop(
-    image: Awaited<ReturnType<typeof this.makeJimp>>,
+    image: JimpInstance,
     options: Transformations['crop'],
-  ) {
+  ): JimpInstance {
     return image.crop({
       x: options.x,
       y: options.y,
       w: options.width,
       h: options.hight,
-    });
+    }) as JimpInstance;
   }
 
   private rotate(
-    image: Awaited<ReturnType<typeof this.makeJimp>>,
+    image: JimpInstance,
     degree: Transformations['rotate'],
-  ) {
-    return image.rotate(degree);
+  ): JimpInstance {
+    return image.rotate(degree) as JimpInstance;
   }
 
   private flip(
-    image: Awaited<ReturnType<typeof this.makeJimp>>,
+    image: JimpInstance,
     options: Transformations['flip'],
-  ) {
+  ): JimpInstance {
     return image.flip({
       horizontal: options.horizontal,
       vertical: options.vertical,
-    });
+    }) as JimpInstance;
   }
 
-  private effect(
-    image: Awaited<ReturnType<typeof this.makeJimp>>,
-    options: Transformations['effect'],
-  ) {
-    // We don't need to break at the end of every case, because return
-    // exits the function completely.
-    switch (options) {
-      case 'blur':
-        return image.blur(10);
-      case 'dither':
-        return image.dither();
-      case 'fisheye':
-        return image.fisheye();
-      case 'greyscale':
-        return image.greyscale();
-      case 'invert':
-        return image.invert();
-      case 'pixelate':
-        return image.pixelate(10);
-      case 'sepia':
-        return image.sepia();
-      default:
-        throw new HttpException(
-          'Invalid effect option',
-          HttpStatus.BAD_REQUEST,
-        );
+  private filters(
+    image: JimpInstance,
+    filters: Transformations['filters'],
+  ): JimpInstance {
+    for (const filter in filters) {
+      if (filters[filter]) {
+        if (typeof filters[filter] === 'number')
+          image[filter as keyof Transformations['filters']](filters[filter]);
+        else image[filter as keyof Transformations['filters']]();
+      }
     }
+
+    return image;
   }
 }
-
-// A note about the repetitive use of Awaited<ReturnType<typeof this.makeJimp>>:
-// Idealy, Jimp objects would have a consistent exposed type. But unfortunately,
-// that is not the case.

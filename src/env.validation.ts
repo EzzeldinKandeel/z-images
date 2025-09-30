@@ -6,7 +6,7 @@ import { IsNumber, IsString, Max, Min, validateSync } from 'class-validator';
 // to autocomplete environment variable keys, which is very handy.
 export class EnvironmentVariables {
   @IsString()
-  HOSTNAME: string;
+  DOMAIN_NAME: string;
 
   @IsNumber()
   @Min(0)

@@ -19,6 +19,4 @@ async function bootstrap() {
   await app.listen(configService.get('PORT') ?? 3000);
 }
 
-// ESLint complains that this should be awaited,
-// but this is the way they do it in Nest's official documentation.
-bootstrap();
+void bootstrap();

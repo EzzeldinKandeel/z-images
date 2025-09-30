@@ -110,7 +110,7 @@ export class ImagesService {
     await this.createImageRecord(imageObjectName, mimeType, imageOwner);
 
     return {
-      url: `${this.configService.getOrThrow('HOSTNAME')}/images/${imageObjectName}`,
+      url: `${this.configService.getOrThrow('DOMAIN_NAME')}/images/${imageObjectName}`,
       mimeType,
     };
   }

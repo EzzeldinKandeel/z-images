@@ -37,7 +37,7 @@ export class ImagesController {
   @UseGuards(JwtAuthGuard)
   // Specifying the content type makes the browser view the image
   // instead of automatically downloading it.
-  @Header('Content-Type', 'image')
+  @Header('Content-Type', 'image/*')
   async findOne(
     @Param('imagePath') imagePath: string,
     @CurrentUser() user: User,

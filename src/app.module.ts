@@ -4,10 +4,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { DataSource } from 'typeorm';
-import { User } from './users/entities/user.entity';
 import { EnvironmentVariables, validate } from './env.validation';
 import { ImagesModule } from './images/images.module';
-import { Image } from './images/entities/image.entity';
 
 @Module({
   imports: [
@@ -21,7 +19,7 @@ import { Image } from './images/entities/image.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE_NAME'),
-        entities: [User, Image],
+        autoLoadEntities: true,
         synchronize: true, // Auto DB migrations (for early development only)
       }),
       inject: [ConfigService],

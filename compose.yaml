@@ -1,0 +1,68 @@
+services:
+  server:
+    build:
+      context: .
+      target: dev
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+          initial_sync: true
+        - action: rebuild
+          path: package.json
+    ports:
+      - 3000:3000
+      - 9001:9001
+      - 9229:9229
+    environment:
+      DOMAIN_NAME: /run/secrets/domain-name
+      PORT: 3000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: admin
+      DB_PASSWORD: admin
+      DB_DATABASE_NAME: z-images
+      BCRYPT_SALT_ROUNDS: 12
+      JWT_SECRET: /run/secrets/jwt-secret
+      MINIO_ENDPOINT: objstore
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin000
+    depends_on:
+      - db
+      - objstore
+    secrets:
+      - domain-name
+      - jwt-secret
+  db:
+    image: postgres:18
+    restart: always
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: z-images
+    expose:
+      - 5432
+  objstore:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    restart: always
+    command: server /data --console-address ":9001"
+    volumes:
+      - objstore-data:/data
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin000
+    expose:
+      - 9000
+      - 9001
+volumes:
+  db-data:
+  objstore-data:
+secrets:
+  domain-name:
+    file: local-config/domain-name.txt
+  jwt-secret:
+    file: local-config/jwt-secret.txt

@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { DataSource } from 'typeorm';
 import { EnvironmentVariables, validate } from './env.validation';
 import { ImagesModule } from './images/images.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -21,6 +22,16 @@ import { ImagesModule } from './images/images.module';
         database: configService.get('DB_DATABASE_NAME'),
         autoLoadEntities: true,
         synchronize: true, // Auto DB migrations (for early development only)
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
+        connection: {
+          host: configService.get('REDIS_HOST') as string,
+          port: +configService.get('REDIS_PORT'),
+        },
       }),
       inject: [ConfigService],
     }),

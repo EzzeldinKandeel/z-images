@@ -14,6 +14,7 @@ export class UsersService {
     private userRepository: Repository<User>,
     private configService: ConfigService<EnvironmentVariables>,
   ) {}
+
   async create(createUserDto: CreateUserDto): Promise<void> {
     const user = new User();
     user.username = createUserDto.username;

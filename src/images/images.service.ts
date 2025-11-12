@@ -36,6 +36,26 @@ export class ImagesService {
     private configService: ConfigService<EnvironmentVariables>,
   ) {
     this.minioClient = nestMinioService.getMinio();
+
+    this.minioClient
+      .bucketExists('z-images')
+      .then((exists: boolean) => {
+        if (!exists) {
+          this.minioClient
+            .makeBucket('z-images')
+            .then(() => {
+              console.log('Minio: Object storage bucket created successfully');
+            })
+            .catch((error) => {
+              console.error('Could not create object storage bucket');
+              throw error;
+            });
+        }
+      })
+      .catch((error) => {
+        console.error('Could not check object storage bucket existence');
+        throw error;
+      });
   }
 
   async findOne(imagePath: string, user: User): Promise<StreamableFile> {
@@ -129,8 +149,8 @@ export class ImagesService {
         undefined,
         { 'Content-Type': mimeType },
       );
-    } catch (err) {
-      console.error('Could not store image in object storage', err);
+    } catch (error) {
+      console.error('Could not store image in object storage', error);
       throw new HttpException(
         'Could not upload image(s)',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -151,17 +171,17 @@ export class ImagesService {
       imageRecord.mimetype = mimeType;
       imageRecord.user = imageOwner;
       await this.imageRepository.save(imageRecord);
-    } catch (err) {
+    } catch (error) {
       // Something went wrong with saving the image path in the database.
       // So, we delete the image from storage, then throw an http exception.
-      console.error('Could not create a record for image in database', err);
+      console.error('Could not create a record for image in database', error);
       console.log('Attempting deletion of image from object storage...');
 
       try {
         await this.minioClient.removeObject('z-images', imageObjectName);
         console.log('Image deletion successful');
-      } catch (err) {
-        console.error('Could not delete image from object storage', err);
+      } catch (error) {
+        console.error('Could not delete image from object storage', error);
       }
 
       throw new HttpException(

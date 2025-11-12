@@ -4,14 +4,14 @@ import {
   Injectable,
   StreamableFile,
 } from '@nestjs/common';
-import { ImagesService, MimeType } from '../images.service';
+import { MimeType } from '../images.service';
 import { readCompleteBuffer } from 'src/utils/read-complete-buffer';
 import { Jimp, JimpInstance } from 'jimp';
 import { Transformations } from './dto/transform-image.dto';
 
 @Injectable()
 export class ImageManipulationService {
-  constructor(private imagesService: ImagesService) {}
+  constructor() {}
 
   async transform(
     image: StreamableFile,
@@ -28,7 +28,7 @@ export class ImageManipulationService {
         imageJimp = this.applyTransformation(
           transformation as keyof Transformations,
           imageJimp,
-          transformations[transformation] as number | object,
+          transformations[transformation] as number | Record<any, any>,
         );
       }
     }
@@ -54,6 +54,24 @@ export class ImageManipulationService {
     }
   }
 
+  // private async bufferToJimpWithMime(
+  //   imageBuffer: Buffer,
+  //   mime: MimeType,
+  // ): Promise<JimpInstance> {
+  //   try {
+  //     const imageJimp = (await Jimp.read(imageBuffer)) as JimpInstance;
+  //     return imageJimp;
+  //   } catch (error) {
+  //     console.error(error);
+  //     throw new HttpException('Something went wrong', 500);
+  //   }
+  // }
+
+  // private async jimpToButter(
+  //   imageJimp: JimpInstance,
+  //   mime: MimeType,
+  // ): Promise<void> {}
+
   private applyTransformation(
     transformationType: keyof Transformations,
     image: JimpInstance,
@@ -69,7 +87,7 @@ export class ImageManipulationService {
       case 'resize':
         return this.resize(image, options as Transformations['resize']);
       case 'rotate':
-        return this.resize(image, options as Transformations['resize']);
+        return this.rotate(image, options as Transformations['rotate']);
       default:
         return image;
     }

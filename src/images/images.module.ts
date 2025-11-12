@@ -7,6 +7,7 @@ import { EnvironmentVariables } from 'src/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Image } from './entities/image.entity';
 import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   controllers: [ImagesController],
@@ -26,6 +27,9 @@ import { ImageManipulationService } from './image-manipulation/image-manipulatio
     }),
     TypeOrmModule.forFeature([Image]),
     ConfigModule,
+    BullModule.registerQueue({
+      name: 'images',
+    }),
   ],
 })
 export class ImagesModule {}

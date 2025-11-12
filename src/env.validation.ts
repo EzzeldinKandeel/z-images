@@ -49,6 +49,14 @@ export class EnvironmentVariables {
 
   @IsString()
   MINIO_SECRET_KEY: string;
+
+  @IsString()
+  REDIS_HOST: string;
+
+  @IsNumber()
+  @Min(0)
+  @Max(65535)
+  REDIS_PORT: number;
 }
 
 export function validate(config: Record<string, unknown>) {

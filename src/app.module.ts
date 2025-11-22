@@ -7,6 +7,7 @@ import { DataSource } from 'typeorm';
 import { EnvironmentVariables, validate } from './env.validation';
 import { ImagesModule } from './images/images.module';
 import { BullModule } from '@nestjs/bullmq';
+import { UtilsModule } from './utils/utils.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { BullModule } from '@nestjs/bullmq';
     UsersModule,
     AuthModule,
     ImagesModule,
+    UtilsModule,
   ],
 })
 export class AppModule {

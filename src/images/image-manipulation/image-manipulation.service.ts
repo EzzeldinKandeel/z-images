@@ -4,32 +4,37 @@ import {
   Injectable,
   StreamableFile,
 } from '@nestjs/common';
-import { MimeType } from '../images.service';
-import { readCompleteBuffer } from 'src/utils/read-complete-buffer';
 import { Jimp, JimpInstance } from 'jimp';
 import { Transformations } from './dto/transform-image.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { UtilsService } from 'src/utils/utils.service';
+import { MimeType } from 'src/utils/utils.types';
 
 @Injectable()
 export class ImageManipulationService {
-  constructor() {}
+  constructor(
+    @InjectQueue('imageManipulation')
+    private readonly imageManipulationQueue: Queue,
+    private readonly utilsService: UtilsService,
+  ) {}
 
   async transform(
     image: StreamableFile,
     transformations: Transformations,
   ): Promise<{ imageBuffer: Buffer; mimeType: MimeType }> {
-    let imageJimp: JimpInstance = await this.makeJimp(image);
-
-    // We do this because format is not like any other transformation,
-    // and should only be considered at the very end (after all other
-    // transformations have been applied).
-    const { format, ...restOfTransformations } = transformations;
-    for (const transformation in restOfTransformations) {
+    // We do this because the image format (more specifically its mime type)
+    // is needed when converting from Jimp object to buffer.
+    if (!transformations.format) {
+      transformations.format = this.utilsService.mimeToFormat(
+        image.getHeaders().type as MimeType,
+      );
+    }
+    const imageBuffer = await this.utilsService.readCompleteBuffer(
+      image.getStream(),
+    );
+    for (const transformation in transformations) {
       if (transformations[transformation]) {
-        imageJimp = this.applyTransformation(
-          transformation as keyof Transformations,
-          imageJimp,
-          transformations[transformation] as number | Record<any, any>,
-        );
       }
     }
 
@@ -42,24 +47,12 @@ export class ImageManipulationService {
     return { imageBuffer: await imageJimp.getBuffer(mime), mimeType: mime };
   }
 
-  private async makeJimp(image: StreamableFile): Promise<JimpInstance> {
-    try {
-      const imageBuffer = await readCompleteBuffer(image.getStream());
-      const imageJimp = (await Jimp.read(imageBuffer)) as JimpInstance;
-
-      return imageJimp;
-    } catch (error) {
-      console.error(error);
-      throw new HttpException('Something went wrong', 500);
-    }
-  }
-
-  // private async bufferToJimpWithMime(
-  //   imageBuffer: Buffer,
-  //   mime: MimeType,
-  // ): Promise<JimpInstance> {
+  // private async makeJimp(image: StreamableFile): Promise<JimpInstance> {
   //   try {
+  //     const imageBuffer = await readCompleteBuffer(image.getStream());
   //     const imageJimp = (await Jimp.read(imageBuffer)) as JimpInstance;
+  //     console.log(imageJimp.mime);
+  //
   //     return imageJimp;
   //   } catch (error) {
   //     console.error(error);
@@ -67,10 +60,25 @@ export class ImageManipulationService {
   //   }
   // }
 
-  // private async jimpToButter(
-  //   imageJimp: JimpInstance,
-  //   mime: MimeType,
-  // ): Promise<void> {}
+  private async bufferToJimp(imageBuffer: Buffer): Promise<JimpInstance> {
+    try {
+      const imageJimp = (await Jimp.read(imageBuffer)) as JimpInstance;
+      return imageJimp;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Something went wrong', 500);
+    }
+  }
+
+  private async jimpToBuffer(imageJimp: JimpInstance): Promise<Buffer> {
+    try {
+      const imageBuffer = await imageJimp.getBuffer(imageJimp.mime as MimeType);
+      return imageBuffer;
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Something went wrong', 500);
+    }
+  }
 
   private applyTransformation(
     transformationType: keyof Transformations,

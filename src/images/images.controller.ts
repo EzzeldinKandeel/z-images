@@ -23,7 +23,7 @@ import { TransformImageDto } from './image-manipulation/dto/transform-image.dto'
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
-  new FileTypeValidator({ fileType: 'image/*' }),
+  new FileTypeValidator({ fileType: 'image/' }),
 ];
 
 @Controller('images')
@@ -58,7 +58,7 @@ export class ImagesController {
 
   @Post(':imagePath/transform')
   @UseGuards(JwtAuthGuard)
-  @Header('Content-Type', 'image')
+  @Header('Content-Type', 'image/*')
   async transform(
     @Param('imagePath') imagePath: string,
     @CurrentUser() user: User,

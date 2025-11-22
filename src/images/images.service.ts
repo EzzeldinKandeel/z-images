@@ -15,14 +15,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/env.validation';
-
-export type MimeType =
-  | 'image/x-ms-bmp'
-  | 'image/bmp'
-  | 'image/gif'
-  | 'image/jpeg'
-  | 'image/png'
-  | 'image/tiff';
+import { MimeType } from 'src/utils/utils.types';
 
 export type ImageData = { url: string; mimeType: MimeType };
 

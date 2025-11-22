@@ -7,6 +7,7 @@ import {
   IsOptional,
   ValidateNested,
 } from 'class-validator';
+import { ImageFormat } from 'src/utils/utils.types';
 
 const formats = ['bmp', 'gif', 'jpeg', 'png', 'tiff'] as const;
 
@@ -105,7 +106,7 @@ export class Transformations {
 
   @IsIn(formats)
   @IsOptional()
-  format: (typeof formats)[number];
+  format: ImageFormat;
 }
 
 export class TransformImageDto {

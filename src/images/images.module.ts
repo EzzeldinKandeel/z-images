@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Image } from './entities/image.entity';
 import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 import { BullModule } from '@nestjs/bullmq';
+import { UtilsModule } from 'src/utils/utils.module';
 
 @Module({
   controllers: [ImagesController],
@@ -28,8 +29,9 @@ import { BullModule } from '@nestjs/bullmq';
     TypeOrmModule.forFeature([Image]),
     ConfigModule,
     BullModule.registerQueue({
-      name: 'images',
+      name: 'imageManipulation',
     }),
+    UtilsModule,
   ],
 })
 export class ImagesModule {}

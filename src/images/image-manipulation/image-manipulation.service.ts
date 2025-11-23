@@ -7,9 +7,14 @@ import {
 import { Jimp, JimpInstance } from 'jimp';
 import { Transformations } from './dto/transform-image.dto';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import { UtilsService } from 'src/utils/utils.service';
 import { MimeType } from 'src/utils/utils.types';
+
+export type ImageJobData = {
+  imageBuffer: Buffer;
+  transformations: Transformations;
+};
 
 @Injectable()
 export class ImageManipulationService {
@@ -30,21 +35,26 @@ export class ImageManipulationService {
         image.getHeaders().type as MimeType,
       );
     }
-    const imageBuffer = await this.utilsService.readCompleteBuffer(
+    const originalImageBuffer = await this.utilsService.readCompleteBuffer(
       image.getStream(),
     );
-    for (const transformation in transformations) {
-      if (transformations[transformation]) {
-      }
-    }
 
-    // If the user did not specify an image format, the image will be exported
-    // in its original format.
-    const mime = (
-      format ? `image/${format}` : image.getHeaders().type
-    ) as MimeType;
+    const jobData: ImageJobData = {
+      imageBuffer: originalImageBuffer,
+      transformations,
+    };
+    const job = await this.imageManipulationQueue.add('', jobData);
 
-    return { imageBuffer: await imageJimp.getBuffer(mime), mimeType: mime };
+    const manipulatedImageBuffer = (await job.waitUntilFinished(
+      new QueueEvents('imageManipulation'),
+    )) as Buffer;
+
+    console.log(manipulatedImageBuffer);
+
+    return {
+      imageBuffer: manipulatedImageBuffer,
+      mimeType: this.utilsService.formatToMime(transformations.format),
+    };
   }
 
   // private async makeJimp(image: StreamableFile): Promise<JimpInstance> {

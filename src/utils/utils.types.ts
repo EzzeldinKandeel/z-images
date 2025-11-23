@@ -1,3 +1,3 @@
-export type Formmat = 'bmp`' | 'gif' | 'jpeg' | 'png' | 'tiff';
+export type ImageFormat = 'bmp' | 'gif' | 'jpeg' | 'png' | 'tiff';
 
-export type MimeType = `image/${Formmat}`;
+export type MimeType = `image/${ImageFormat}`;

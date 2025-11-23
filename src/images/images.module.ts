@@ -9,6 +9,7 @@ import { Image } from './entities/image.entity';
 import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 import { BullModule } from '@nestjs/bullmq';
 import { UtilsModule } from 'src/utils/utils.module';
+import { join } from 'node:path';
 
 @Module({
   controllers: [ImagesController],
@@ -30,6 +31,7 @@ import { UtilsModule } from 'src/utils/utils.module';
     ConfigModule,
     BullModule.registerQueue({
       name: 'imageManipulation',
+      processors: [join(__dirname, 'images.processor.js')],
     }),
     UtilsModule,
   ],

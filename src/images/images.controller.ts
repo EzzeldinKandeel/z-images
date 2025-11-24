@@ -17,9 +17,8 @@ import { ImagesService, ImageData } from './images.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
-import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
-import { TransformImageDto } from './image-manipulation/dto/transform-image.dto';
+import { TransformImageDto } from './dto/transform-image.dto';
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
@@ -28,10 +27,7 @@ const fileValidators = [
 
 @Controller('images')
 export class ImagesController {
-  constructor(
-    private readonly imagesService: ImagesService,
-    private readonly imageManipulationService: ImageManipulationService,
-  ) {}
+  constructor(private readonly imagesService: ImagesService) {}
 
   @Get(':imagePath')
   @UseGuards(JwtAuthGuard)
@@ -58,14 +54,13 @@ export class ImagesController {
 
   @Post(':imagePath/transform')
   @UseGuards(JwtAuthGuard)
-  @Header('Content-Type', 'image/*')
   async transform(
     @Param('imagePath') imagePath: string,
     @CurrentUser() user: User,
     @Body() transformImageDto: TransformImageDto,
   ): Promise<ImageData> {
     const image = await this.imagesService.findOne(imagePath, user);
-    const imageBufferData = await this.imageManipulationService.transform(
+    const imageBufferData = await this.imagesService.transform(
       image,
       transformImageDto.transformations,
     );

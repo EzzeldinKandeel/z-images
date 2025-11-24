@@ -48,7 +48,7 @@ class Flip {
 class Filters {
   @IsNumber()
   @IsOptional()
-  blur: number;
+  blur: number = 0;
 
   @IsBoolean()
   @IsOptional()
@@ -68,7 +68,7 @@ class Filters {
 
   @IsNumber()
   @IsOptional()
-  pixelate: number;
+  pixelate: number = 0;
 
   @IsBoolean()
   @IsOptional()

@@ -6,14 +6,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Image } from './entities/image.entity';
-import { ImageManipulationService } from './image-manipulation/image-manipulation.service';
 import { BullModule } from '@nestjs/bullmq';
 import { UtilsModule } from 'src/utils/utils.module';
 import { join } from 'node:path';
 
 @Module({
   controllers: [ImagesController],
-  providers: [ImagesService, ImageManipulationService],
+  providers: [ImagesService],
   imports: [
     NestMinioModule.registerAsync({
       imports: [ConfigModule],

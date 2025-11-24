@@ -16,8 +16,16 @@ import { User } from 'src/users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { EnvironmentVariables } from 'src/env.validation';
 import { MimeType } from 'src/utils/utils.types';
+import { Queue, QueueEvents } from 'bullmq';
+import { Transformations } from './dto/transform-image.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { UtilsService } from 'src/utils/utils.service';
 
 export type ImageData = { url: string; mimeType: MimeType };
+export type ImageJobData = {
+  imageBuffer: Buffer;
+  transformations: Transformations;
+};
 
 @Injectable()
 export class ImagesService {
@@ -27,6 +35,10 @@ export class ImagesService {
     @InjectRepository(Image)
     private imageRepository: Repository<Image>,
     private configService: ConfigService<EnvironmentVariables>,
+
+    @InjectQueue('imageManipulation')
+    private readonly imageManipulationQueue: Queue,
+    private readonly utilsService: UtilsService,
   ) {
     this.minioClient = nestMinioService.getMinio();
 
@@ -182,5 +194,48 @@ export class ImagesService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async transform(
+    image: StreamableFile,
+    transformations: Transformations,
+  ): Promise<{ imageBuffer: Buffer; mimeType: MimeType }> {
+    // We do this because the image format (more specifically its mime type)
+    // is needed when converting from Jimp object to buffer.
+    if (!transformations.format) {
+      transformations.format = this.utilsService.mimeToFormat(
+        image.getHeaders().type as MimeType,
+      );
+    }
+    const originalImageBuffer = await this.utilsService.readCompleteBuffer(
+      image.getStream(),
+    );
+
+    const jobData: ImageJobData = {
+      imageBuffer: originalImageBuffer,
+      transformations,
+    };
+    const job = await this.imageManipulationQueue.add('', jobData);
+
+    // Bullmq changes the shape of buffers to:
+    // {
+    //  type: 'Buffer';
+    //  data: Array<>;
+    // }
+    // whenever they are passed to or from the main thread.
+    // So we have to recreate the buffer from the data array.
+    const manipulatedImageBuffer = Buffer.from(
+      (
+        (await job.waitUntilFinished(new QueueEvents('imageManipulation'))) as {
+          type: 'Buffer';
+          data: Array<any>;
+        }
+      ).data,
+    );
+
+    return {
+      imageBuffer: manipulatedImageBuffer,
+      mimeType: this.utilsService.formatToMime(transformations.format),
+    };
   }
 }

@@ -1,15 +1,22 @@
-import { ImageJobData } from './image-manipulation/image-manipulation.service';
 import { SandboxedJob } from 'bullmq';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Jimp, JimpInstance } from 'jimp';
-import { Transformations } from './image-manipulation/dto/transform-image.dto';
 import { UtilsService } from 'src/utils/utils.service';
+import { ImageJobData } from './images.service';
 
 export default async function process(
   job: SandboxedJob<ImageJobData, any>,
 ): Promise<any> {
   const utilsService = new UtilsService();
-  const { imageBuffer, transformations } = job.data;
+  const transformations = job.data.transformations;
+  const imageBuffer = Buffer.from(
+    (
+      job.data.imageBuffer as unknown as {
+        type: 'Buffer';
+        data: Uint8Array;
+      }
+    ).data,
+  );
 
   const imageJimp = (await Jimp.fromBuffer(imageBuffer)) as JimpInstance;
 
@@ -45,13 +52,45 @@ export default async function process(
         });
         break;
       case 'filters':
-        for (const filter in transformations) {
-          if (transformation[filter]) {
-            if (typeof transformation[filter] === 'number')
-              imageJimp[filter as keyof Transformations['filters']](
-                transformation[filter],
-              );
-            else imageJimp[filter as keyof Transformations['filters']]();
+        for (const filter in transformations.filters) {
+          switch (filter) {
+            case 'blur':
+              if (transformations.filters.blur > 0) {
+                imageJimp.blur(transformations.filters.blur);
+              }
+              break;
+            case 'dither':
+              if (transformations.filters.dither) {
+                imageJimp.dither();
+              }
+              break;
+            case 'fisheye':
+              if (transformations.filters.fisheye) {
+                imageJimp.fisheye();
+              }
+              break;
+            case 'greyscale':
+              if (transformations.filters.greyscale) {
+                imageJimp.greyscale();
+              }
+              break;
+            case 'invert':
+              if (transformations.filters.invert) {
+                imageJimp.invert();
+              }
+              break;
+            case 'pixelate':
+              if (transformations.filters.pixelate > 0) {
+                imageJimp.pixelate(transformations.filters.pixelate);
+              }
+              break;
+            case 'sepia':
+              if (transformations.filters.sepia) {
+                imageJimp.sepia();
+              }
+              break;
+            default:
+              break;
           }
         }
         break;
@@ -60,7 +99,7 @@ export default async function process(
     }
   }
 
-  const manipulatedImageBuffer = imageJimp.getBuffer(
+  const manipulatedImageBuffer = await imageJimp.getBuffer(
     utilsService.formatToMime(transformations.format),
   );
 

@@ -3,11 +3,11 @@ import {
   Controller,
   FileTypeValidator,
   Get,
-  Header,
   MaxFileSizeValidator,
   Param,
   ParseFilePipe,
   Post,
+  Res,
   StreamableFile,
   UploadedFiles,
   UseGuards,
@@ -19,6 +19,8 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/users/entities/user.entity';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { TransformImageDto } from './dto/transform-image.dto';
+import { Response } from 'express';
+import { MimeType } from 'src/utils/utils.types';
 
 const fileValidators = [
   new MaxFileSizeValidator({ maxSize: 100000000 }), // 10MB.
@@ -31,14 +33,14 @@ export class ImagesController {
 
   @Get(':imagePath')
   @UseGuards(JwtAuthGuard)
-  // Specifying the content type makes the browser view the image
-  // instead of automatically downloading it.
-  @Header('Content-Type', 'image/*')
   async findOne(
     @Param('imagePath') imagePath: string,
     @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    return this.imagesService.findOne(imagePath, user);
+    const imageStream = await this.imagesService.findOne(imagePath, user);
+    res.set('Content-Type', imageStream.getHeaders().type as MimeType);
+    return imageStream;
   }
 
   @Post()

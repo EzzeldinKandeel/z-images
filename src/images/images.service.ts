@@ -170,11 +170,12 @@ export class ImagesService {
     mimeType: MimeType,
     imageOwner: User,
   ): Promise<void> {
+    const imageRecord = new Image();
+    imageRecord.path = imageObjectName;
+    imageRecord.mimetype = mimeType;
+    imageRecord.user = imageOwner;
+
     try {
-      const imageRecord = new Image();
-      imageRecord.path = imageObjectName;
-      imageRecord.mimetype = mimeType;
-      imageRecord.user = imageOwner;
       await this.imageRepository.save(imageRecord);
     } catch (error) {
       // Something went wrong with saving the image path in the database.

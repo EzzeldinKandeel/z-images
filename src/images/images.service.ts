@@ -223,7 +223,8 @@ export class ImagesService {
     //  type: 'Buffer';
     //  data: Array<>;
     // }
-    // whenever they are passed to or from the main thread.
+    // whenever they are passed to or from the main thread,
+    // because they are stringified.
     // So we have to recreate the buffer from the data array.
     const manipulatedImageBuffer = Buffer.from(
       (

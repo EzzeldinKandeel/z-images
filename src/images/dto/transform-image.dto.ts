@@ -26,7 +26,7 @@ class Crop {
   width: number;
 
   @IsNumber()
-  hight: number;
+  height: number;
 
   @IsNumber()
   x: number;

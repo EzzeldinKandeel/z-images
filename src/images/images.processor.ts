@@ -9,6 +9,15 @@ export default async function process(
 ): Promise<any> {
   const utilsService = new UtilsService();
   const transformations = job.data.transformations;
+
+  // Bullmq changes the shape of buffers to:
+  // {
+  //  type: 'Buffer';
+  //  data: Array<>;
+  // }
+  // whenever they are passed to or from the main thread,
+  // because they are stringified.
+  // So we have to recreate the buffer from the data array.
   const imageBuffer = Buffer.from(
     (
       job.data.imageBuffer as unknown as {
@@ -38,7 +47,7 @@ export default async function process(
         imageJimp.crop({
           x: transformations.crop.x,
           y: transformations.crop.y,
-          h: transformations.crop.hight,
+          h: transformations.crop.height,
           w: transformations.crop.width,
         });
         break;

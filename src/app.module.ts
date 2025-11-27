@@ -8,6 +8,8 @@ import { EnvironmentVariables, validate } from './env.validation';
 import { ImagesModule } from './images/images.module';
 import { BullModule } from '@nestjs/bullmq';
 import { UtilsModule } from './utils/utils.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -36,10 +38,28 @@ import { UtilsModule } from './utils/utils.module';
       }),
       inject: [ConfigService],
     }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
+        throttlers: [
+          {
+            ttl: +configService.get('THROTTLER_TTL'),
+            limit: +configService.get('THROTTLER_LIMIT'),
+          },
+        ],
+      }),
+      inject: [ConfigService],
+    }),
     UsersModule,
     AuthModule,
     ImagesModule,
     UtilsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {

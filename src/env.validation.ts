@@ -57,6 +57,12 @@ export class EnvironmentVariables {
   @Min(0)
   @Max(65535)
   REDIS_PORT: number;
+
+  @IsNumber()
+  THROTTLER_TTL: number;
+
+  @IsNumber()
+  THROTTLER_LIMIT: number;
 }
 
 export function validate(config: Record<string, unknown>) {

@@ -4,35 +4,48 @@ import imageProcessor from './images.processor';
 import { ImageJobData } from './images.service';
 
 describe('ImagesProcessor', () => {
+  const imagesQueue = new Queue('images');
+  let originalImageBufferObject: { type: 'Buffer'; data: Array<any> };
+
+  async function getStoredBuffer(fileName: string): Promise<Buffer> {
+    return Buffer.from(
+      (
+        (await JSON.parse(
+          await fs.readFile(`test-resources/${fileName}`, {
+            encoding: 'utf8',
+          }),
+        )) as { type: 'Buffer'; data: Array<any> }
+      ).data,
+    );
+  }
+
+  function createJob(
+    transformations: Record<any, any>,
+  ): SandboxedJob<ImageJobData> {
+    return new Job(imagesQueue, '', {
+      transformations,
+      imageBuffer: originalImageBufferObject,
+    }) as unknown as SandboxedJob<ImageJobData>;
+  }
+
+  beforeAll(async () => {
+    originalImageBufferObject = (await JSON.parse(
+      await fs.readFile('test-resources/original-image-buffer-object.txt', {
+        encoding: 'utf8',
+      }),
+    )) as { type: 'Buffer'; data: Array<any> };
+  });
+
   it('should resize image', async () => {
     const transformations = {
       resize: { width: 50, height: 50 },
       format: 'png',
     };
 
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
-
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-resize.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-resize.txt',
     );
-
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -43,87 +56,35 @@ describe('ImagesProcessor', () => {
       format: 'png',
     };
 
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
-
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-crop.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-crop.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
 
   it('should flip image horizontally', async () => {
     const transformations = { flip: { horizontal: true }, format: 'png' };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-flip-horizontal.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-flip-horizontal.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
 
   it('should flip image vertically', async () => {
     const transformations = { flip: { vertical: true }, format: 'png' };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-flip-vertical.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-flip-vertical.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -133,58 +94,24 @@ describe('ImagesProcessor', () => {
       flip: { horizontal: true, vertical: true },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-flip-horizontal-and-vertical.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-flip-horizontal-and-vertical.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
 
   it('should rotate image 90 degrees', async () => {
     const transformations = { rotate: 90, format: 'png' };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-rotate.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-rotate.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -202,29 +129,12 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-invert.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-invert.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -242,29 +152,12 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-blur.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-blur.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -282,29 +175,12 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-dither.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-dither.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -322,29 +198,12 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-fisheye.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-fisheye.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -362,29 +221,12 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-greyscale.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-greyscale.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -402,29 +244,12 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-sepia.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-sepia.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
@@ -442,87 +267,36 @@ describe('ImagesProcessor', () => {
       },
       format: 'png',
     };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-filter-pixelate.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-filter-pixelate.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
 
   it('should format image to jpeg', async () => {
     const transformations = { format: 'jpeg' };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-format-jpeg.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-format-jpeg.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });
 
   it('should format image to gif', async () => {
     const transformations = { format: 'gif' };
-    const originalImageBufferObject = (await JSON.parse(
-      await fs.readFile('test-resources/original-image-buffer-object.txt', {
-        encoding: 'utf8',
-      }),
-    )) as { type: 'Buffer'; data: Array<any> };
 
-    const manipulatedImageBuffer = Buffer.from(
-      (
-        (await JSON.parse(
-          await fs.readFile(
-            'test-resources/manipulated-image-buffer-format-gif.txt',
-            {
-              encoding: 'utf8',
-            },
-          ),
-        )) as { type: 'Buffer'; data: Array<any> }
-      ).data,
+    const manipulatedImageBuffer = await getStoredBuffer(
+      'manipulated-image-buffer-format-gif.txt',
     );
 
-    const job = new Job(new Queue('images'), '', {
-      transformations,
-      imageBuffer: originalImageBufferObject,
-    }) as unknown as SandboxedJob<ImageJobData>;
+    const job = createJob(transformations);
 
     expect(await imageProcessor(job)).toEqual(manipulatedImageBuffer);
   });

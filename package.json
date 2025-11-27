@@ -34,6 +34,7 @@
     "bullmq": "^5.63.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "helmet": "^8.1.0",
     "jimp": "^1.6.0",
     "minio": "^8.0.5",
     "nestjs-minio": "^2.6.2",

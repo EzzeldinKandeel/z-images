@@ -30,9 +30,9 @@ $ npm install
 $ cp .env.example .env
 ```
 
-3. Set the required environment variables in .env file.
+### 3. Set the required environment variables in .env file.
 
-## 4. Compile and run the project
+### 4. Compile and run the project
 
 ```bash
 # development

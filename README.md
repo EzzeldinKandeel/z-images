@@ -60,7 +60,7 @@ A docker image & compose file are being worked on to simplify running the projec
 
 This is a project I'm developing to learn the Nest framework. The project idea is from [roadmap.sh](https://roadmap.sh/projects/image-processing-service).
 
-Since this is a learning project, some parts of it might be too basic, and other parts might be too overengineered. I did try, as much as I could, to follow best practices, and I used the hell out of [Node](https://nodejs.org/docs/latest/api/) and [Nest](https://docs.nestjs.com/)'s official documentaions.
+Since this is a learning project, some parts of it might be too basic, and other parts might be too overengineered. I did try, as much as I could, to follow best practices, and I used the hell out of [Node](https://nodejs.org/docs/latest/api/) and [Nest](https://docs.nestjs.com/)'s official documentations.
 
 Other resources that were of help: [Docker's Documentaion](https://docs.docker.com/), [Mozilla Developer Network's Javascript Reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference), [Typescript's Documentaion](https://www.typescriptlang.org/docs/)
 

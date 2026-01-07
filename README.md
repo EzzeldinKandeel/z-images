@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a web API for storing images using a S3-compatible object storage solution and for applying several transformations on stored images.
+This is a web API for storing images using an S3-compatible object storage solution and for applying several transformations to stored images.
 
 Developed using the [Nest](https://nestjs.com) framework.
 
